@@ -17,6 +17,8 @@ datasource db {
   provider = "postgresql"
 }
 
+//// enums
+
 enum Role {
   CUSTOMER
   TELLER
@@ -74,6 +76,8 @@ enum NotificationType {
   IN_APP
 }
 
+//// models
+
 model User {
   userId        Int                   @id @default(autoincrement())
   full_name     String
@@ -86,24 +90,31 @@ model User {
   approvals     TransactionApproval[]
   audit_logs    AuditLog[]
   notifications Notification[]
-  createdAt     DateTime              @default(now())
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 }
 
 model Account {
-  account_id            Int                 @id @default(autoincrement())
-  owner_id              Int
-  parent_account_id     Int?
-  account_number        String              @unique
-  account_type          AccountType
-  balance               Decimal
-  state                 AccountState
-  createdAt             DateTime            @default(now())
+  account_id        Int          @id @default(autoincrement())
+  owner_id          Int
+  parent_account_id Int?
+  account_number    String       @unique
+  account_type      AccountType
+  balance           Decimal
+  state             AccountState
+
   owner                 User                @relation(fields: [owner_id], references: [userId])
   parent_account        Account?            @relation("SubAccounts", fields: [parent_account_id], references: [account_id], onDelete: NoAction, onUpdate: NoAction)
   sub_accounts          Account[]           @relation("SubAccounts")
   sent_transactions     Transaction[]       @relation("SentTransactions")
   received_transactions Transaction[]       @relation("ReceivedTransactions")
   features              AccountFeatureMap[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 }
 
 model Transaction {
@@ -113,10 +124,13 @@ model Transaction {
   transaction_type TransactionType
   amount           Decimal
   status           TransactionStatus
-  createdAt        DateTime              @default(now())
   from_account     Account?              @relation("SentTransactions", fields: [from_account_id], references: [account_id])
   to_account       Account?              @relation("ReceivedTransactions", fields: [to_account_id], references: [account_id])
   approvals        TransactionApproval[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 }
 
 model TransactionApproval {
@@ -128,6 +142,10 @@ model TransactionApproval {
   decision       ApprovalDecision
   transaction    Transaction      @relation(fields: [transaction_id], references: [transaction_id])
   approver       User             @relation(fields: [approved_by], references: [userId])
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 }
 
 model AccountFeature {
@@ -135,6 +153,10 @@ model AccountFeature {
   name       FeatureName
   extra_cost Decimal
   accounts   AccountFeatureMap[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 }
 
 model AccountFeatureMap {
@@ -144,6 +166,10 @@ model AccountFeatureMap {
   account    Account        @relation(fields: [account_id], references: [account_id])
   feature    AccountFeature @relation(fields: [feature_id], references: [feature_id])
 
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
   @@unique([account_id, feature_id])
 }
 
@@ -152,6 +178,10 @@ model InterestPolicy {
   account_type         AccountType
   interest_rate        Decimal
   calculation_strategy String
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 }
 
 model AuditLog {
@@ -162,6 +192,10 @@ model AuditLog {
   entityId  String
   timestamp DateTime @default(now())
   user      User     @relation(fields: [userId], references: [userId])
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 }
 
 model Notification {
@@ -171,5 +205,8 @@ model Notification {
   message         String
   isRead          Boolean          @default(false)
   user            User             @relation(fields: [userId], references: [userId])
-  createdAt       DateTime         @default(now())
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 }
