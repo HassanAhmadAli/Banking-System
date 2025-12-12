@@ -1,0 +1,175 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../generated/prisma"
+  moduleFormat = "cjs"
+  engineType   = "client"
+}
+
+// // // // turn off
+
+// generator zod {
+//   provider = "prisma-zod-generator"
+//   output   = "../generated/prisma/zod"
+//   config   = "./zod-generator.config.json"
+// }
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  CUSTOMER
+  TELLER
+  MANAGER
+  ADMIN
+}
+
+enum AccountType {
+  SAVINGS
+  CHECKING
+  LOAN
+  INVESTMENT
+}
+
+enum AccountState {
+  ACTIVE
+  FROZEN
+  SUSPENDED
+  CLOSED
+}
+
+enum TransactionType {
+  DEPOSIT
+  WITHDRAW
+  TRANSFER
+}
+
+enum TransactionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ApprovalLevel {
+  AUTO
+  TELLER
+  MANAGER
+  ADMIN
+}
+
+enum ApprovalDecision {
+  APPROVED
+  REJECTED
+}
+
+enum FeatureName {
+  OVERDRAFT
+  INSURANCE
+  PREMIUM
+}
+
+enum NotificationType {
+  EMAIL
+  SMS
+  IN_APP
+}
+
+model User {
+  userId        Int                   @id @default(autoincrement())
+  full_name     String
+  email         String                @unique
+  password_hash String
+  phone         String?
+  status        String
+  roles         Role[]
+  accounts      Account[]
+  approvals     TransactionApproval[]
+  audit_logs    AuditLog[]
+  notifications Notification[]
+  createdAt     DateTime              @default(now())
+}
+
+model Account {
+  account_id            Int                 @id @default(autoincrement())
+  owner_id              Int
+  parent_account_id     Int?
+  account_number        String              @unique
+  account_type          AccountType
+  balance               Decimal
+  state                 AccountState
+  createdAt             DateTime            @default(now())
+  owner                 User                @relation(fields: [owner_id], references: [userId])
+  parent_account        Account?            @relation("SubAccounts", fields: [parent_account_id], references: [account_id], onDelete: NoAction, onUpdate: NoAction)
+  sub_accounts          Account[]           @relation("SubAccounts")
+  sent_transactions     Transaction[]       @relation("SentTransactions")
+  received_transactions Transaction[]       @relation("ReceivedTransactions")
+  features              AccountFeatureMap[]
+}
+
+model Transaction {
+  transaction_id   Int                   @id @default(autoincrement())
+  from_account_id  Int?
+  to_account_id    Int?
+  transaction_type TransactionType
+  amount           Decimal
+  status           TransactionStatus
+  createdAt        DateTime              @default(now())
+  from_account     Account?              @relation("SentTransactions", fields: [from_account_id], references: [account_id])
+  to_account       Account?              @relation("ReceivedTransactions", fields: [to_account_id], references: [account_id])
+  approvals        TransactionApproval[]
+}
+
+model TransactionApproval {
+  approval_id    Int              @id @default(autoincrement())
+  transaction_id Int
+  approved_by    Int
+  approval_level ApprovalLevel
+  approval_date  DateTime         @default(now())
+  decision       ApprovalDecision
+  transaction    Transaction      @relation(fields: [transaction_id], references: [transaction_id])
+  approver       User             @relation(fields: [approved_by], references: [userId])
+}
+
+model AccountFeature {
+  feature_id Int                 @id @default(autoincrement())
+  name       FeatureName
+  extra_cost Decimal
+  accounts   AccountFeatureMap[]
+}
+
+model AccountFeatureMap {
+  id         Int            @id @default(autoincrement())
+  account_id Int
+  feature_id Int
+  account    Account        @relation(fields: [account_id], references: [account_id])
+  feature    AccountFeature @relation(fields: [feature_id], references: [feature_id])
+
+  @@unique([account_id, feature_id])
+}
+
+model InterestPolicy {
+  policy_id            Int         @id @default(autoincrement())
+  account_type         AccountType
+  interest_rate        Decimal
+  calculation_strategy String
+}
+
+model AuditLog {
+  log_id    Int      @id @default(autoincrement())
+  userId    Int
+  action    String
+  entity    String
+  entityId  String
+  timestamp DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [userId])
+}
+
+model Notification {
+  notification_id Int              @id @default(autoincrement())
+  userId          Int
+  type            NotificationType
+  message         String
+  isRead          Boolean          @default(false)
+  user            User             @relation(fields: [userId], references: [userId])
+  createdAt       DateTime         @default(now())
+}
