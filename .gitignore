@@ -70,4 +70,4 @@ prisma/migrations/*
 !.example.env
 
 uploads/
-/generated/prisma
+**/generated/

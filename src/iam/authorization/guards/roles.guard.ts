@@ -19,7 +19,6 @@ export class RolesGuard implements CanActivate {
     }
     const req: RequestWithActiveUser = context.switchToHttp().getRequest<RequestWithActiveUser>();
     const user = req[Keys.User]!;
-    if (user.role === "Debugging") return true;
     return allowedRoles.includes(user.role);
   }
 }

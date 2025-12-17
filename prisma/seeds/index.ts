@@ -17,8 +17,8 @@ const adapter = new PrismaPg({
 const prisma = new PrismaClient({ adapter });
 
 async function seed() {
-  const hashingService = new Argon2Service();
-  /// seed
+  const _hashingService = new Argon2Service();
+  /// seeding data
   return Promise.resolve();
 }
 

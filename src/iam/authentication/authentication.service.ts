@@ -55,6 +55,8 @@ export class AuthenticationService {
         isVerified: false,
         verificationCode,
         verificationCodeExpiresAt,
+        //todo: important
+        status: "Active",
       },
       select: {
         id: true,

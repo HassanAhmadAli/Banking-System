@@ -1,6 +1,6 @@
 generator client {
   provider     = "prisma-client"
-  output       = "../generated/prisma"
+  output       = "../src/prisma/generated/prisma-client/"
   moduleFormat = "cjs"
   engineType   = "client"
 }
@@ -79,10 +79,20 @@ enum NotificationType {
 //// models
 
 model User {
-  userId        Int                   @id @default(autoincrement())
-  full_name     String
-  email         String                @unique
-  password_hash String
+  id          Int     @id @default(autoincrement())
+  //
+  fullName    String
+  email       String  @unique
+  phoneNumber String  @unique
+  password    String
+  nationalId  String  @unique
+  role        Role
+  isActive    Boolean @default(true)
+
+  isVerified                Boolean   @default(false)
+  verificationCode          String?
+  verificationCodeExpiresAt DateTime?
+
   phone         String?
   status        String
   roles         Role[]
@@ -105,7 +115,7 @@ model Account {
   balance           Decimal
   state             AccountState
 
-  owner                 User                @relation(fields: [owner_id], references: [userId])
+  owner                 User                @relation(fields: [owner_id], references: [id])
   parent_account        Account?            @relation("SubAccounts", fields: [parent_account_id], references: [account_id], onDelete: NoAction, onUpdate: NoAction)
   sub_accounts          Account[]           @relation("SubAccounts")
   sent_transactions     Transaction[]       @relation("SentTransactions")
@@ -141,7 +151,7 @@ model TransactionApproval {
   approval_date  DateTime         @default(now())
   decision       ApprovalDecision
   transaction    Transaction      @relation(fields: [transaction_id], references: [transaction_id])
-  approver       User             @relation(fields: [approved_by], references: [userId])
+  approver       User             @relation(fields: [approved_by], references: [id])
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -191,7 +201,7 @@ model AuditLog {
   entity    String
   entityId  String
   timestamp DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [userId])
+  user      User     @relation(fields: [userId], references: [id])
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -204,7 +214,7 @@ model Notification {
   type            NotificationType
   message         String
   isRead          Boolean          @default(false)
-  user            User             @relation(fields: [userId], references: [userId])
+  user            User             @relation(fields: [userId], references: [id])
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt

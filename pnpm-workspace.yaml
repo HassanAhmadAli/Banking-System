@@ -7,3 +7,4 @@ onlyBuiltDependencies:
   - esbuild
   - prisma
   - prisma-zod-generator
+  - unrs-resolver
