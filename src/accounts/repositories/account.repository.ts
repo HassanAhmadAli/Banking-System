@@ -5,6 +5,9 @@ import { SavingsAccount } from "../entities/savings-account.entity";
 import { CheckingAccount } from '../entities/checking-account.entity';
 import { CompositeAccount } from '../entities/composite-account.entity';
 import { AccountType } from "@/prisma";
+import { InsuranceDecorator } from "../decorators/insurance.decorator";
+import { PremiumServiceDecorator } from "../decorators/premium-service.decorator";
+import { OverdraftProtectionDecorator } from "../decorators/overdraft-protection.decorator";
 
 @Injectable()
 export class AccountRepository {
@@ -101,5 +104,69 @@ export class AccountRepository {
         const timestamp = Date.now();
         const random = Math.floor(Math.random() * 1000);
         return `${prefix}${timestamp}${random}`;
+    }
+
+    //Decorator Pattern
+    async loadAccountWithFeatures(accountId: number): Promise<IAccountComponent> {
+        // Load account with features
+        const dbAccount = await this.prisma.client.account.findUnique({
+            where: { account_id: accountId },
+            include: {
+                features: {
+                    include: {
+                        feature: true, // Include feature details
+                    },
+                },
+                sub_accounts: true, // For composite pattern
+            },
+        });
+
+        if (!dbAccount) {
+            throw new Error(`Account with ID ${accountId} not found`);
+        }
+
+        // Create base account (or composite)
+        let account: IAccountComponent;
+
+        if (dbAccount.sub_accounts && dbAccount.sub_accounts.length > 0) {
+            // Composite account
+            const composite = new CompositeAccount(
+                dbAccount.account_id,
+                dbAccount.account_number,
+            );
+            for (const childDb of dbAccount.sub_accounts) {
+                const childEntity = this.toDomainEntity(childDb);
+                composite.add(childEntity);
+            }
+            account = composite;
+        } else {
+            // Individual account
+            account = this.toDomainEntity(dbAccount);
+        }
+
+        console.log(`\nApplying decorators to account ${dbAccount.account_number}:`);
+
+        for (const featureMap of dbAccount.features) {
+            const featureName = featureMap.feature.name;
+
+            switch (featureName) {
+                case 'OVERDRAFT':
+                    account = new OverdraftProtectionDecorator(account);
+                    break;
+
+                case 'PREMIUM':
+                    account = new PremiumServiceDecorator(account);
+                    break;
+
+                case 'INSURANCE':
+                    account = new InsuranceDecorator(account);
+                    break;
+
+                default:
+                    console.log(`Unknown feature: ${featureName}`);
+            }
+        }
+
+        return account;
     }
 }

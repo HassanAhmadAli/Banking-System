@@ -1,6 +1,6 @@
-import { Controller, Post, Get, Body, Param, ParseIntPipe } from '@nestjs/common';
+import { Controller, Post, Delete, Get, Body, Param, ParseIntPipe } from '@nestjs/common';
 import { AccountsService } from './accounts.service';
-import { AccountType } from '@/prisma';
+import { AccountType, FeatureName } from '@/prisma';
 
 @Controller('accounts')
 export class AccountsController {
@@ -30,4 +30,31 @@ export class AccountsController {
     withdraw(@Param('id', ParseIntPipe) id: number, @Body() body: { amount: number }) {
         return this.accountsService.withdraw(id, body.amount);
     }
+
+    //Decorator Pattern End-Points
+    @Post(':id/features')
+    addFeature(@Param('id', ParseIntPipe) id: number, @Body() body: { featureName: FeatureName }) {
+        return this.accountsService.addFeature(id, body.featureName);
+    }
+
+    @Delete(':id/features/:featureName')
+    removeFeature(@Param('id', ParseIntPipe) id: number, @Param('featureName') featureName: FeatureName) {
+        return this.accountsService.removeFeature(id, featureName);
+    }
+
+    @Get(':id/with-features')
+    getAccountWithFeatures(@Param('id', ParseIntPipe) id: number) {
+        return this.accountsService.getAccountWithFeatures(id);
+    }
+
+    @Post(':id/deposit-with-features')
+    depositWithFeatures(@Param('id', ParseIntPipe) id: number, @Body() body: { amount: number }) {
+        return this.accountsService.depositWithFeatures(id, body.amount);
+    }
+
+    @Post(':id/withdraw-with-features')
+    withdrawWithFeatures(@Param('id', ParseIntPipe) id: number, @Body() body: { amount: number }) {
+        return this.accountsService.withdrawWithFeatures(id, body.amount);
+    }
+
 }

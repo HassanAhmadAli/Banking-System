@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { AccountRepository } from './repositories/account.repository';
 import { PrismaService } from '@/prisma';
-import { AccountType } from '@/prisma';
+import { AccountType, FeatureName } from '@/prisma';
 
 @Injectable()
 export class AccountsService {
@@ -101,4 +101,108 @@ export class AccountsService {
 
         return result;
     }
+
+    //Decorator Pattern
+    async addFeature(accountId: number, featureName: FeatureName) {
+        console.log(`\nAdding feature ${featureName} to account ${accountId}`);
+
+        let feature = await this.prisma.client.accountFeature.findFirst({
+            where: { name: featureName },
+        });
+
+        if (!feature) {
+            const costs = {
+                OVERDRAFT: 0,
+                PREMIUM: 10,
+                INSURANCE: 5,
+            };
+
+            feature = await this.prisma.client.accountFeature.create({
+                data: {
+                    name: featureName,
+                    extra_cost: costs[featureName] || 0,
+                },
+            });
+        }
+
+        const featureMap = await this.prisma.client.accountFeatureMap.create({
+            data: {
+                account_id: accountId,
+                feature_id: feature.feature_id,
+            },
+        });
+
+        console.log(`Feature ${featureName} added successfully`);
+        return featureMap;
+    }
+
+    async removeFeature(accountId: number, featureName: FeatureName) {
+        console.log(`\nRemoving feature ${featureName} from account ${accountId}`);
+
+        const feature = await this.prisma.client.accountFeature.findFirst({
+            where: { name: featureName },
+        });
+
+        if (!feature) {
+            throw new Error(`Feature ${featureName} not found`);
+        }
+
+        await this.prisma.client.accountFeatureMap.deleteMany({
+            where: {
+                account_id: accountId,
+                feature_id: feature.feature_id,
+            },
+        });
+
+        console.log(`Feature ${featureName} removed successfully`);
+    }
+
+    async getAccountWithFeatures(accountId: number) {
+        return this.accountRepository.loadAccountWithFeatures(accountId);
+    }
+
+    async depositWithFeatures(accountId: number, amount: number) {
+        console.log(`\nDEPOSIT WITH FEATURES: $${amount} to account ID ${accountId}`);
+
+        const account = await this.accountRepository.loadAccountWithFeatures(accountId);
+
+        account.deposit(amount);
+
+        if (account.getChildren) {
+            for (const child of account.getChildren()) {
+                await this.accountRepository.saveBalance(child.getId(), child.getBalance());
+            }
+        } else {
+            await this.accountRepository.saveBalance(accountId, account.getBalance());
+        }
+
+        return {
+            success: true,
+            newBalance: account.getBalance(),
+            accountType: account.getType(),
+        };
+    }
+
+    async withdrawWithFeatures(accountId: number, amount: number) {
+        console.log(`\nWITHDRAW WITH FEATURES: $${amount} from account ID ${accountId}`);
+
+        const account = await this.accountRepository.loadAccountWithFeatures(accountId);
+
+        account.withdraw(amount);
+
+        if (account.getChildren) {
+            for (const child of account.getChildren()) {
+                await this.accountRepository.saveBalance(child.getId(), child.getBalance());
+            }
+        } else {
+            await this.accountRepository.saveBalance(accountId, account.getBalance());
+        }
+
+        return {
+            success: true,
+            newBalance: account.getBalance(),
+            accountType: account.getType(),
+        };
+    }
+    
 }
