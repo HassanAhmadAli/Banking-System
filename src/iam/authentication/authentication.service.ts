@@ -1,3 +1,4 @@
+import { logger } from "@/utils";
 import { BadRequestException, Inject, Injectable, UnauthorizedException } from "@nestjs/common";
 import { HashingService } from "@/iam/hashing/hashing.service";
 import { SignupDto } from "./dto/signinup.dto";
@@ -22,7 +23,6 @@ import { EnvVariables } from "@/common/schema/env";
 import { SignoutDto } from "./dto/signout.dto";
 import { MailerService } from "@nestjs-modules/mailer";
 import { VerifyEmailDto } from "./dto/verify-email.dto";
-import { logger } from "@/utils";
 
 @Injectable()
 export class AuthenticationService {
@@ -47,7 +47,7 @@ export class AuthenticationService {
     const encryptedPassword = await this.hashingService.hash({ raw: rawPassword });
     const verificationCode = (this.NODE_ENV === "production" ? randomInt(10000000, 99999999) : 12345678).toString();
     const verificationCodeExpiresAt = new Date(Date.now() + 15 * 60 * 1000);
-    console.log(signupDto);
+    logger.info(signupDto);
     await this.prisma.user.create({
       data: {
         ...signupDto,
