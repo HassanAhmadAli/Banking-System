@@ -13,15 +13,29 @@ import KeyvRedis from "@keyv/redis";
 import morgan from "morgan";
 import { env } from "@/common/env";
 import { AccountsModule } from "./accounts/accounts.module";
+import { AppMailingModule } from "./mailing/mailing.module";
+import { BullModule } from "@nestjs/bullmq";
 @Module({
   imports: [
+    BullModule.forRoot({
+      connection: {
+        url: env!.REDIS_DATABASE_URL,
+      },
+    }),
     CacheModule.registerAsync({
       isGlobal: true,
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService<EnvVariables>) => ({
-        ttl: 5 * 1000,
-        stores: [new KeyvRedis(configService.getOrThrow("REDIS_DATABASE_URL", { infer: true }), {})],
+        ttl: 5 * 60 * 1000,
+        stores: [
+          new KeyvRedis(
+            configService.getOrThrow("REDIS_DATABASE_URL", {
+              infer: true,
+            }),
+            {},
+          ),
+        ],
       }),
     }),
     env!.ENABLE_Devtools
@@ -42,6 +56,7 @@ import { AccountsModule } from "./accounts/accounts.module";
     PrismaModule,
     IdentityAndAccessManagementModule,
     AccountsModule,
+    AppMailingModule,
   ],
   controllers: [],
   providers: [
@@ -59,6 +74,7 @@ import { AccountsModule } from "./accounts/accounts.module";
       useClass: TimeoutInterceptor,
     },
   ],
+  exports: [BullModule],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

@@ -9,14 +9,16 @@ import { CheckingInterestStrategy } from "./strategies/cheking-interest.strategy
 import { InvestmentInterestStrategy } from "./strategies/investment-interest.strategy";
 
 @Module({
-  providers: [AccountsService,
+  providers: [
+    AccountsService,
     AccountRepository,
     InterestCalculatorService,
     SavingsInterestStrategy,
     CheckingInterestStrategy,
     LoanInterestStrategy,
-    InvestmentInterestStrategy,],
+    InvestmentInterestStrategy,
+  ],
   controllers: [AccountsController],
   exports: [AccountsService],
 })
-export class AccountsModule { }
+export class AccountsModule {}

@@ -3,6 +3,7 @@ export const Keys = {
   Roles: Symbol("Roles_Key"),
   User: Symbol("User_Key"),
   Permissions: Symbol("Permissions_KEY"),
+  MailingConsumer: "Mailing_Consumer",
 } as const;
 export const ErrorMessages = {
   EMAIL_ALREADY_EXIST: "Email Already registerd",

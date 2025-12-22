@@ -57,7 +57,7 @@ export class OverdraftProtectionDecorator extends AccountDecorator {
     return balance;
   }
 
-    override getType(): string {
-        return `${this.wrappedAccount.getType()} (Overdraft Protected)`;
-    }
+  override getType(): string {
+    return `${this.wrappedAccount.getType()} (Overdraft Protected)`;
+  }
 }

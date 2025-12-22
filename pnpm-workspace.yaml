@@ -5,6 +5,7 @@ onlyBuiltDependencies:
   - '@swc/core'
   - argon2
   - esbuild
+  - msgpackr-extract
   - prisma
   - prisma-zod-generator
   - unrs-resolver

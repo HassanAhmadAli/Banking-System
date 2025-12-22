@@ -1,5 +1,5 @@
 import { logger } from "@/utils";
-import { BaseAccount } from "./base-account.entity";
+import { BaseAccount } from "./base-account.model";
 import { AccountType } from "@/prisma";
 
 export class CheckingAccount extends BaseAccount {

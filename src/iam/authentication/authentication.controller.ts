@@ -23,7 +23,6 @@ export class AuthenticationController {
     return this.authenticationService.verifyEmail(verifyEmailDto);
   }
 
-  // Create Account
   @Post("signup")
   async signup(@Body() signUpDto: SignupDto) {
     return await this.authenticationService.signup(signUpDto);

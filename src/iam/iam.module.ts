@@ -1,6 +1,6 @@
 import { Module } from "@nestjs/common";
 import { JwtModule } from "@nestjs/jwt";
-import { ConfigModule, ConfigService } from "@nestjs/config";
+import { ConfigService } from "@nestjs/config";
 import { EnvVariables } from "@/common/schema/env";
 import { RefreshTokenIdsStorage } from "./authentication/refresh-token-ids.storage";
 import { AccessTokenGuard } from "./authentication/guard/access-token.guard";
@@ -11,8 +11,8 @@ import { AuthenticationService } from "./authentication/authentication.service";
 import { APP_FILTER, APP_GUARD } from "@nestjs/core";
 import { AuthenticationGuard } from "./authentication/guard/authentication.guard";
 import { JwtErrorFilter } from "./authorization/filter/jwt-error.filter";
-import { MailerModule } from "@nestjs-modules/mailer";
 import { RolesGuard } from "./authorization/guards/roles.guard";
+import { AppMailingModule } from "@/mailing/mailing.module";
 
 @Module({
   controllers: [AuthenticationController],
@@ -38,21 +38,7 @@ import { RolesGuard } from "./authorization/guards/roles.guard";
     },
   ],
   imports: [
-    MailerModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory(configService: ConfigService<EnvVariables>) {
-        return {
-          transport: {
-            host: configService.get("APP_EMAIL_HOST", { infer: true }),
-            auth: {
-              user: configService.get("APP_EMAIL_User", { infer: true }),
-              pass: configService.get("APP_EMAIL_Password", { infer: true }),
-            },
-          },
-        };
-      },
-    }),
+    AppMailingModule,
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService<EnvVariables>) => {

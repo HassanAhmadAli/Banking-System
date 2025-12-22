@@ -17,12 +17,14 @@ import {
 import { randomUUID, randomInt } from "node:crypto";
 import { RefreshTokenIdsStorage } from "./refresh-token-ids.storage";
 import { Prisma, PrismaService, User } from "@/prisma";
-import { ErrorMessages } from "@/common/const";
+import { ErrorMessages, Keys } from "@/common/const";
 import { ConfigService } from "@nestjs/config";
 import { EnvVariables } from "@/common/schema/env";
 import { SignoutDto } from "./dto/signout.dto";
-import { MailerService } from "@nestjs-modules/mailer";
 import { VerifyEmailDto } from "./dto/verify-email.dto";
+import { InjectQueue } from "@nestjs/bullmq";
+import { Queue } from "bullmq";
+import { MailData } from "@/mailing/mail-data.interface";
 
 @Injectable()
 export class AuthenticationService {
@@ -34,7 +36,7 @@ export class AuthenticationService {
     @Inject(RefreshTokenIdsStorage)
     private readonly refreshTokenIdsStorage: RefreshTokenIdsStorage,
     private readonly config: ConfigService<EnvVariables>,
-    private readonly mailerService: MailerService,
+    @InjectQueue(Keys.MailingConsumer) private readonly mailingQueue: Queue<MailData>,
   ) {
     this.NODE_ENV = this.config.getOrThrow("NODE_ENV", { infer: true });
   }
@@ -68,10 +70,10 @@ export class AuthenticationService {
       logger.debug({ message });
       return { message };
     }
-    void this.mailerService.sendMail({
+    await this.mailingQueue.add("sendMail", {
       to: signupDto.email,
-      subject: "Welcome! Verify your Email",
-      html: `
+      title: "Welcome! Verify your Email",
+      content: `
           <h1>Welcome to Medi-Care App</h1>
           <p>Your verification code is: <b>${verificationCode}</b></p>
           <p>This code expires in 15 minutes.</p>

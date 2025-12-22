@@ -9,60 +9,60 @@ import { logger } from "@/utils";
 
 @Injectable()
 export class InterestCalculatorService {
-    private strategies: Map<AccountType, IInterestStrategy>;
-    constructor(
-        private savingsStrategy: SavingsInterestStrategy,
-        private checkingStrategy: CheckingInterestStrategy,
-        private loanStrategy: LoanInterestStrategy,
-        private investmentStrategy: InvestmentInterestStrategy,
-    ) {
-        // Initialize strategy map
-        this.strategies = new Map<AccountType, IInterestStrategy>([
-            [AccountType.SAVINGS, savingsStrategy],
-            [AccountType.CHECKING, checkingStrategy],
-            [AccountType.LOAN, loanStrategy],
-            [AccountType.INVESTMENT, investmentStrategy],
-        ]);
+  private strategies: Map<AccountType, IInterestStrategy>;
+  constructor(
+    private savingsStrategy: SavingsInterestStrategy,
+    private checkingStrategy: CheckingInterestStrategy,
+    private loanStrategy: LoanInterestStrategy,
+    private investmentStrategy: InvestmentInterestStrategy,
+  ) {
+    // Initialize strategy map
+    this.strategies = new Map<AccountType, IInterestStrategy>([
+      [AccountType.SAVINGS, savingsStrategy],
+      [AccountType.CHECKING, checkingStrategy],
+      [AccountType.LOAN, loanStrategy],
+      [AccountType.INVESTMENT, investmentStrategy],
+    ]);
+  }
+
+  calculateInterest(accountType: AccountType, balance: number, days: number = 30): number {
+    const strategy = this.strategies.get(accountType);
+
+    if (!strategy) {
+      throw new Error(`No interest strategy found for account type: ${accountType}`);
     }
 
-    calculateInterest(accountType: AccountType, balance: number, days: number = 30): number {
-        const strategy = this.strategies.get(accountType);
+    logger.info(`\nUsing Strategy: ${strategy.getStrategyName()}`);
+    return strategy.calculateInterest(balance, days);
+  }
 
-        if (!strategy) {
-            throw new Error(`No interest strategy found for account type: ${accountType}`);
-        }
-
-        logger.info(`\nUsing Strategy: ${strategy.getStrategyName()}`);
-        return strategy.calculateInterest(balance, days);
+  getAnnualRate(accountType: AccountType): number {
+    const strategy = this.strategies.get(accountType);
+    if (!strategy) {
+      throw new Error(`No interest strategy found for account type: ${accountType}`);
     }
+    return strategy.getAnnualRate();
+  }
 
-    getAnnualRate(accountType: AccountType): number {
-        const strategy = this.strategies.get(accountType);
-        if (!strategy) {
-            throw new Error(`No interest strategy found for account type: ${accountType}`);
-        }
-        return strategy.getAnnualRate();
-    }
+  setStrategy(accountType: AccountType, strategy: IInterestStrategy): void {
+    logger.info(`Changing strategy for ${accountType} to: ${strategy.getStrategyName()}`);
+    this.strategies.set(accountType, strategy);
+  }
 
-    setStrategy(accountType: AccountType, strategy: IInterestStrategy): void {
-        logger.info(`Changing strategy for ${accountType} to: ${strategy.getStrategyName()}`);
-        this.strategies.set(accountType, strategy);
-    }
+  getAllStrategies(): Map<AccountType, IInterestStrategy> {
+    return this.strategies;
+  }
 
-    getAllStrategies(): Map<AccountType, IInterestStrategy> {
-        return this.strategies;
-    }
+  compareReturns(balance: number, days: number = 30): { [key: string]: number } {
+    logger.info(`\nComparing interest returns for balance: $${balance} over ${days} days:`);
 
-    compareReturns(balance: number, days: number = 30): { [key: string]: number } {
-        logger.info(`\nComparing interest returns for balance: $${balance} over ${days} days:`);
+    const results: { [key: string]: number } = {};
 
-        const results: { [key: string]: number } = {};
+    this.strategies.forEach((strategy, accountType) => {
+      const interest = strategy.calculateInterest(balance, days);
+      results[accountType] = interest;
+    });
 
-        this.strategies.forEach((strategy, accountType) => {
-            const interest = strategy.calculateInterest(balance, days);
-            results[accountType] = interest;
-        });
-
-        return results;
-    }
+    return results;
+  }
 }

@@ -1,8 +1,7 @@
 export interface IInterestStrategy {
+  calculateInterest(balance: number, days?: number): number;
 
-    calculateInterest(balance: number, days?: number): number;
+  getAnnualRate(): number;
 
-    getAnnualRate(): number;
-
-    getStrategyName(): string;
+  getStrategyName(): string;
 }

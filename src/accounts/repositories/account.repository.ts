@@ -1,23 +1,26 @@
 import { logger } from "@/utils";
 import { Injectable } from "@nestjs/common";
-import { Account, PrismaService } from "@/prisma";
+import { Account, PrismaService, AccountType } from "@/prisma";
 import { IAccountComponent } from "../interfaces/account-component.interface";
-import { SavingsAccount } from "../entities/savings-account.entity";
-import { CheckingAccount } from "../entities/checking-account.entity";
-import { CompositeAccount } from "../entities/composite-account.entity";
-import { AccountType } from "@/prisma";
+import { SavingsAccount } from "../model/savings-account.model";
+import { CheckingAccount } from "../model/checking-account.model";
+import { CompositeAccount } from "../model/composite-account.model";
 import { InsuranceDecorator } from "../decorators/insurance.decorator";
 import { PremiumServiceDecorator } from "../decorators/premium-service.decorator";
 import { OverdraftProtectionDecorator } from "../decorators/overdraft-protection.decorator";
 
 @Injectable()
 export class AccountRepository {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prismaService: PrismaService) {}
+
+  public get prisma() {
+    return this.prismaService.client;
+  }
 
   async createAccount(userId: number, accountType: AccountType, parentAccountId?: number) {
     const accountNumber = this.generateAccountNumber(accountType);
 
-    const account = await this.prisma.client.account.create({
+    const account = await this.prisma.account.create({
       data: {
         account_number: accountNumber,
         account_type: accountType,
@@ -49,16 +52,12 @@ export class AccountRepository {
 
       case AccountType.INVESTMENT:
         return new CheckingAccount(id, accountNumber, balance);
-
-      default:
-        throw new Error(`Unknown account type: ${dbAccount.account_type}`);
     }
   }
 
   async loadAccountWithChildren(account_id: number): Promise<IAccountComponent> {
-    const dbAccount = await this.prisma.client.account.findUniqueOrThrow({
+    const dbAccount = await this.prisma.account.findUniqueOrThrow({
       where: { account_id: account_id },
-      select: {},
       include: {
         sub_accounts: true,
       },
@@ -79,7 +78,7 @@ export class AccountRepository {
   }
 
   async saveBalance(accountId: number, newBalance: number): Promise<void> {
-    await this.prisma.client.account.update({
+    await this.prisma.account.update({
       where: { account_id: accountId },
       data: { balance: newBalance },
     });
@@ -97,7 +96,7 @@ export class AccountRepository {
   //Decorator Pattern
   async loadAccountWithFeatures(accountId: number): Promise<IAccountComponent> {
     // Load account with features
-    const dbAccount = await this.prisma.client.account.findUnique({
+    const dbAccount = await this.prisma.account.findUnique({
       where: { account_id: accountId },
       include: {
         features: {
@@ -146,9 +145,6 @@ export class AccountRepository {
         case "INSURANCE":
           account = new InsuranceDecorator(account);
           break;
-
-        default:
-          logger.info(`Unknown feature: ${featureName}`);
       }
     }
 
