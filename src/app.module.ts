@@ -12,7 +12,7 @@ import { CacheModule } from "@nestjs/cache-manager";
 import KeyvRedis from "@keyv/redis";
 import morgan from "morgan";
 import { env } from "@/common/env";
-import { AccountsModule } from './accounts/accounts.module';
+import { AccountsModule } from "./accounts/accounts.module";
 @Module({
   imports: [
     CacheModule.registerAsync({
