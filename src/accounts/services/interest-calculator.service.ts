@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotImplementedException } from "@nestjs/common";
 import { IInterestStrategy } from "../strategies/interest-strategy.interface";
 import { SavingsInterestStrategy } from "../strategies/savings-interest.strategy";
 import { CheckingInterestStrategy } from "../strategies/cheking-interest.strategy";
@@ -29,7 +29,7 @@ export class InterestCalculatorService {
     const strategy = this.strategies.get(accountType);
 
     if (!strategy) {
-      throw new Error(`No interest strategy found for account type: ${accountType}`);
+      throw new NotImplementedException(`No interest strategy found for account type: ${accountType}`);
     }
 
     logger.info(`\nUsing Strategy: ${strategy.getStrategyName()}`);
@@ -39,7 +39,7 @@ export class InterestCalculatorService {
   getAnnualRate(accountType: AccountType): number {
     const strategy = this.strategies.get(accountType);
     if (!strategy) {
-      throw new Error(`No interest strategy found for account type: ${accountType}`);
+      throw new NotImplementedException(`No interest strategy found for account type: ${accountType}`);
     }
     return strategy.getAnnualRate();
   }

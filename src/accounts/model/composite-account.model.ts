@@ -1,5 +1,6 @@
 import { logger } from "@/utils";
 import { IAccountComponent } from "../interfaces/account-component.interface";
+import { ConflictException } from "@nestjs/common";
 
 export class CompositeAccount implements IAccountComponent {
   private children: IAccountComponent[] = [];
@@ -54,7 +55,7 @@ export class CompositeAccount implements IAccountComponent {
 
   deposit(amount: number): void {
     if (this.children.length === 0) {
-      throw new Error("Cannot deposit: No child accounts in composite");
+      throw new ConflictException("Cannot deposit: No child accounts in composite");
     }
 
     logger.info(`Depositing $${amount} to composite ${this.accountNumber}`);
@@ -70,12 +71,14 @@ export class CompositeAccount implements IAccountComponent {
 
   withdraw(amount: number): void {
     if (this.children.length === 0) {
-      throw new Error("Cannot withdraw: No child accounts in composite");
+      throw new ConflictException("Cannot withdraw: No child accounts in composite");
     }
 
     const totalBalance = this.getBalance();
     if (totalBalance < amount) {
-      throw new Error(`Insufficient funds in composite. Available: $${totalBalance}, Requested: $${amount}`);
+      throw new ConflictException(
+        `Insufficient funds in composite. Available: $${totalBalance}, Requested: $${amount}`,
+      );
     }
 
     let remaining = amount;
@@ -95,7 +98,7 @@ export class CompositeAccount implements IAccountComponent {
     }
 
     if (remaining > 0) {
-      throw new Error(`Failed to withdraw full amount. Still need: $${remaining}`);
+      throw new ConflictException(`Failed to withdraw full amount. Still need: $${remaining}`);
     }
 
     logger.info(`Withdrawal complete. New composite balance: $${this.getBalance()}`);

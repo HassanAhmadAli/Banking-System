@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { AccountRepository } from "./repositories/account.repository";
 import { PrismaService } from "@/prisma";
 import { AccountType, FeatureName } from "@/prisma";
@@ -148,7 +148,7 @@ export class AccountsService {
     });
 
     if (!feature) {
-      throw new Error(`Feature ${featureName} not found`);
+      throw new NotFoundException(`Feature ${featureName} not found`);
     }
 
     await this.prisma.accountFeatureMap.deleteMany({
@@ -211,7 +211,7 @@ export class AccountsService {
 
   //Strategy Pattern
   async applyInterest(accountId: number, days: number = 30) {
-    console.log(`\nApplying interest to account ${accountId}`);
+    logger.info(`Applying interest to account ${accountId}`);
 
     // Get account from database
     const dbAccount = await this.prisma.account.findUnique({
@@ -219,7 +219,7 @@ export class AccountsService {
     });
 
     if (!dbAccount) {
-      throw new Error("Account not found");
+      throw new NotFoundException("Account not found");
     }
 
     const balance = Number(dbAccount.balance);
@@ -259,7 +259,7 @@ export class AccountsService {
     });
 
     if (!dbAccount) {
-      throw new Error("Account not found");
+      throw new NotFoundException("Account not found");
     }
 
     const rate = this.interestCalculator.getAnnualRate(dbAccount.account_type);

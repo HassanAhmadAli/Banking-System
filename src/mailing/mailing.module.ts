@@ -36,4 +36,4 @@ import { EnvVariables } from "@/common/schema/env";
     }),
   ],
 })
-export class AppMailingModule { }
+export class AppMailingModule {}

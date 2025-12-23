@@ -24,7 +24,7 @@ import { SignoutDto } from "./dto/signout.dto";
 import { VerifyEmailDto } from "./dto/verify-email.dto";
 import { InjectQueue } from "@nestjs/bullmq";
 import { Queue } from "bullmq";
-import { MailData } from "@/mailing/mail-data.interface";
+import { MailData } from "@/mailing/interface/mail-data.interface";
 
 @Injectable()
 export class AuthenticationService {

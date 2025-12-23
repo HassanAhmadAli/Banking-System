@@ -1,6 +1,7 @@
 import { logger } from "@/utils";
 import { AccountDecorator } from "./account-decorator.abstract";
 import { IAccountComponent } from "../interfaces/account-component.interface";
+import { BadRequestException } from "@nestjs/common";
 
 export class OverdraftProtectionDecorator extends AccountDecorator {
   private overdraftLimit = 1000;
@@ -15,12 +16,12 @@ export class OverdraftProtectionDecorator extends AccountDecorator {
     const currentBalance = this.wrappedAccount.getBalance();
     const minAllowedBalance = -this.overdraftLimit;
     if (amount <= 0) {
-      throw new Error("Withdrawal amount must be positive");
+      throw new BadRequestException("Withdrawal amount must be positive");
     }
     const balanceAfterWithdrawal = currentBalance - amount;
     if (balanceAfterWithdrawal < minAllowedBalance) {
-      const availableToWithdraw = currentBalance + this.overdraftLimit;
-      throw new Error(`Exceeds overdraft limit. You can withdraw up to $${availableToWithdraw.toFixed(2)}`);
+      const availableToWithdraw = (currentBalance + this.overdraftLimit).toFixed(2);
+      throw new BadRequestException(`Exceeds overdraft limit. You can withdraw up to $${availableToWithdraw}`);
     }
 
     if (amount > currentBalance) {

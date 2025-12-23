@@ -1,5 +1,5 @@
 import { logger } from "@/utils";
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { Account, PrismaService, AccountType } from "@/prisma";
 import { IAccountComponent } from "../interfaces/account-component.interface";
 import { SavingsAccount } from "../model/savings-account.model";
@@ -109,7 +109,7 @@ export class AccountRepository {
     });
 
     if (!dbAccount) {
-      throw new Error(`Account with ID ${accountId} not found`);
+      throw new NotFoundException(`Account with ID ${accountId} not found`);
     }
 
     // Create base account (or composite)
