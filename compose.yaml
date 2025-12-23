@@ -1,0 +1,41 @@
+name: Bank_app
+services:
+  app1:
+    build:
+      dockerfile: Dockerfile
+    expose:
+      - "3000"
+    ports:
+      - 3000:3000
+    env_file:
+      - .docker.env
+    depends_on:
+      - postgres_db
+      - redis_db
+    restart: always
+
+  postgres_db:
+    image: postgres
+    expose:
+      - "5432"
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password123
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    restart: always
+
+  redis_db:
+    image: redis
+    expose:
+      - "6379"
+    restart: always
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+
+volumes:
+  redis_data:
+  postgres_data:
