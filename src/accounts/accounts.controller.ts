@@ -1,18 +1,23 @@
 import { Controller, Post, Delete, Get, Body, Param, ParseIntPipe, Query } from "@nestjs/common";
 import { AccountsService } from "./accounts.service";
-import { AccountType, FeatureName } from "@/prisma";
+import { CreateAccountDto } from "./dto/create-account.dto";
+import { CreateCompositeAccountDto } from "./dto/create-composite-account.dto";
+import { TransactionDto } from "./dto/transaction.dto";
+import { EditFeatureDto } from "./dto/add-feature.dto";
+import { ApplyInterestDto } from "./dto/apply-interest.dto";
+import { CompareInterestDto } from "./dto/compare-interest.dto";
 
 @Controller("accounts")
 export class AccountsController {
   constructor(private accountsService: AccountsService) {}
 
   @Post()
-  createAccount(@Body() body: { userId: number; accountType: AccountType }) {
-    return this.accountsService.createAccount(body.userId, body.accountType);
+  createAccount(@Body() createAccountDto: CreateAccountDto) {
+    return this.accountsService.createAccount(createAccountDto);
   }
 
   @Post("composite")
-  createComposite(@Body() body: { userId: number; childAccountIds: number[] }) {
+  createComposite(@Body() body: CreateCompositeAccountDto) {
     return this.accountsService.createCompositeAccount(body.userId, body.childAccountIds);
   }
 
@@ -22,23 +27,23 @@ export class AccountsController {
   }
 
   @Post(":id/deposit")
-  deposit(@Param("id", ParseIntPipe) id: number, @Body() body: { amount: number }) {
+  deposit(@Param("id", ParseIntPipe) id: number, @Body() body: TransactionDto) {
     return this.accountsService.deposit(id, body.amount);
   }
 
   @Post(":id/withdraw")
-  withdraw(@Param("id", ParseIntPipe) id: number, @Body() body: { amount: number }) {
+  withdraw(@Param("id", ParseIntPipe) id: number, @Body() body: TransactionDto) {
     return this.accountsService.withdraw(id, body.amount);
   }
 
   //Decorator Pattern End-Points
   @Post(":id/features")
-  addFeature(@Param("id", ParseIntPipe) id: number, @Body() body: { featureName: FeatureName }) {
-    return this.accountsService.addFeature(id, body.featureName);
+  addFeature(@Param("id", ParseIntPipe) id: number, @Body() { featureName }: EditFeatureDto) {
+    return this.accountsService.addFeature(id, featureName);
   }
 
-  @Delete(":id/features/:featureName")
-  removeFeature(@Param("id", ParseIntPipe) id: number, @Param("featureName") featureName: FeatureName) {
+  @Delete(":id/features")
+  removeFeature(@Param("id", ParseIntPipe) id: number, @Body() { featureName }: EditFeatureDto) {
     return this.accountsService.removeFeature(id, featureName);
   }
 
@@ -48,19 +53,19 @@ export class AccountsController {
   }
 
   @Post(":id/deposit-with-features")
-  depositWithFeatures(@Param("id", ParseIntPipe) id: number, @Body() body: { amount: number }) {
+  depositWithFeatures(@Param("id", ParseIntPipe) id: number, @Body() body: TransactionDto) {
     return this.accountsService.depositWithFeatures(id, body.amount);
   }
 
   @Post(":id/withdraw-with-features")
-  withdrawWithFeatures(@Param("id", ParseIntPipe) id: number, @Body() body: { amount: number }) {
+  withdrawWithFeatures(@Param("id", ParseIntPipe) id: number, @Body() body: TransactionDto) {
     return this.accountsService.withdrawWithFeatures(id, body.amount);
   }
 
   //Strategy Pattern End-Points
   @Post(":id/apply-interest")
-  applyInterest(@Param("id", ParseIntPipe) id: number, @Body() body: { days?: number }) {
-    return this.accountsService.applyInterest(id, body.days || 30);
+  applyInterest(@Param("id", ParseIntPipe) id: number, @Body() { days }: ApplyInterestDto) {
+    return this.accountsService.applyInterest(id, days);
   }
 
   @Get(":id/interest-rate")
@@ -69,12 +74,12 @@ export class AccountsController {
   }
 
   @Get("compare-interest")
-  compareInterest(@Query("balance") balance: string, @Query("days") days?: string) {
-    return this.accountsService.compareInterestReturns(Number(balance), days ? Number(days) : 30);
+  compareInterest(@Query() { days, balance }: CompareInterestDto) {
+    return this.accountsService.compareInterest(balance, days);
   }
 
   @Post("apply-interest-all")
-  applyInterestToAll(@Body() body: { days?: number }) {
-    return this.accountsService.applyInterestToAll(body.days || 30);
+  applyInterestToAll(@Body() body: ApplyInterestDto) {
+    return this.accountsService.applyInterestToAll(body.days);
   }
 }

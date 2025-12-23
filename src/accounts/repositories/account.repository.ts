@@ -128,7 +128,7 @@ export class AccountRepository {
       account = this.toDomainEntity(dbAccount);
     }
 
-    logger.info(`\nApplying decorators to account ${dbAccount.account_number}:`);
+    logger.info(`Applying decorators to account ${dbAccount.account_number}:`);
 
     for (const featureMap of dbAccount.features) {
       const featureName = featureMap.feature.name;

@@ -32,7 +32,7 @@ export class InterestCalculatorService {
       throw new NotImplementedException(`No interest strategy found for account type: ${accountType}`);
     }
 
-    logger.info(`\nUsing Strategy: ${strategy.getStrategyName()}`);
+    logger.info(`Using Strategy: ${strategy.getStrategyName()}`);
     return strategy.calculateInterest(balance, days);
   }
 
@@ -54,7 +54,7 @@ export class InterestCalculatorService {
   }
 
   compareReturns(balance: number, days: number = 30): { [key: string]: number } {
-    logger.info(`\nComparing interest returns for balance: $${balance} over ${days} days:`);
+    logger.info(`Comparing interest returns for balance: $${balance} over ${days} days:`);
 
     const results: { [key: string]: number } = {};
 

@@ -4,6 +4,7 @@ import { PrismaService } from "@/prisma";
 import { AccountType, FeatureName } from "@/prisma";
 import { logger } from "@/utils";
 import { InterestCalculatorService } from "./services/interest-calculator.service";
+import { CreateAccountDto } from "./dto/create-account.dto";
 
 @Injectable()
 export class AccountsService {
@@ -17,7 +18,7 @@ export class AccountsService {
     return this.prismaService.client;
   }
 
-  async createAccount(userId: number, accountType: AccountType) {
+  async createAccount({ userId, accountType }: CreateAccountDto) {
     return this.accountRepository.createAccount(userId, accountType);
   }
 
@@ -40,7 +41,7 @@ export class AccountsService {
   }
 
   async deposit(accountId: number, amount: number) {
-    logger.info(`\nDEPOSIT REQUEST: $${amount} to account ID ${accountId}`);
+    logger.info(`DEPOSIT REQUEST: $${amount} to account ID ${accountId}`);
 
     const account = await this.accountRepository.loadAccountWithChildren(accountId);
 
@@ -62,7 +63,7 @@ export class AccountsService {
   }
 
   async withdraw(accountId: number, amount: number) {
-    logger.info(`\nWITHDRAW REQUEST: $${amount} from account ID ${accountId}`);
+    logger.info(`WITHDRAW REQUEST: $${amount} from account ID ${accountId}`);
 
     const account = await this.accountRepository.loadAccountWithChildren(accountId);
 
@@ -108,7 +109,7 @@ export class AccountsService {
 
   //Decorator Pattern
   async addFeature(accountId: number, featureName: FeatureName) {
-    logger.info(`\nAdding feature ${featureName} to account ${accountId}`);
+    logger.info(`Adding feature ${featureName} to account ${accountId}`);
 
     let feature = await this.prisma.accountFeature.findFirst({
       where: { name: featureName },
@@ -141,7 +142,7 @@ export class AccountsService {
   }
 
   async removeFeature(accountId: number, featureName: FeatureName) {
-    logger.info(`\nRemoving feature ${featureName} from account ${accountId}`);
+    logger.info(`Removing feature ${featureName} from account ${accountId}`);
 
     const feature = await this.prisma.accountFeature.findFirst({
       where: { name: featureName },
@@ -166,7 +167,7 @@ export class AccountsService {
   }
 
   async depositWithFeatures(accountId: number, amount: number) {
-    logger.info(`\nDEPOSIT WITH FEATURES: $${amount} to account ID ${accountId}`);
+    logger.info(`DEPOSIT WITH FEATURES: $${amount} to account ID ${accountId}`);
 
     const account = await this.accountRepository.loadAccountWithFeatures(accountId);
 
@@ -188,7 +189,7 @@ export class AccountsService {
   }
 
   async withdrawWithFeatures(accountId: number, amount: number) {
-    logger.info(`\nWITHDRAW WITH FEATURES: $${amount} from account ID ${accountId}`);
+    logger.info(`WITHDRAW WITH FEATURES: $${amount} from account ID ${accountId}`);
 
     const account = await this.accountRepository.loadAccountWithFeatures(accountId);
 
@@ -275,7 +276,7 @@ export class AccountsService {
   /**
    * Compare interest returns across account types
    */
-  async compareInterestReturns(balance: number, days: number = 30) {
+  async compareInterest(balance: number, days: number = 30) {
     const results = this.interestCalculator.compareReturns(balance, days);
 
     const formatted = Object.entries(results).map(([accountType, interest]) => ({
@@ -294,7 +295,7 @@ export class AccountsService {
    * Apply interest to all accounts (batch job - cron)
    */
   async applyInterestToAll(days: number = 30) {
-    logger.info(`\nApplying interest to ALL accounts...`);
+    logger.info(`Applying interest to ALL accounts...`);
 
     const accounts = await this.prisma.account.findMany({
       where: {
