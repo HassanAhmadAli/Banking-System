@@ -5,6 +5,7 @@ import { AppModule } from "./app.module";
 import { ConfigService } from "@nestjs/config";
 import { EnvVariables } from "./common/schema/env";
 import { env } from "./common/env";
+import { HttpException, HttpStatus } from "@nestjs/common";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -24,6 +25,26 @@ async function bootstrap() {
     );
     SwaggerModule.setup("swagger", app, cleanupOpenApiDoc(openApiDoc));
   }
+
+  app.useGlobalFilters({
+    catch(exception: any, host: any) {
+      const ctx = host.switchToHttp();
+      const response = ctx.getResponse();
+      const request = ctx.getRequest();
+
+      const status = exception instanceof HttpException ? exception.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR;
+
+      console.error("❌ ERROR:", exception.message);
+
+      response.status(status).json({
+        success: false,
+        error: exception.message || "Something went wrong",
+        timestamp: new Date().toISOString(),
+        path: request.url,
+      });
+    },
+  } as any);
+
   app.enableCors();
   app.enableShutdownHooks();
   await app.listen(config.getOrThrow("PORT", { infer: true }));
